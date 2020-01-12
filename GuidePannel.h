@@ -11,7 +11,8 @@ class CGuideValue
 {
 	char name[10];
 public:
-	CGuideValue(){ 
+	CGuideValue() : mAchieve(0),mValue(0), pPrev(nullptr)
+	{
 		strcpy(name, "guidvalue");
 		pNext = NULL; };
 	~CGuideValue(){ 

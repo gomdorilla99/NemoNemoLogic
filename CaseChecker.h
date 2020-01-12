@@ -46,9 +46,10 @@ class CCaseChecker :public CLinkList<CCaseNode>
 	Node<int> *mpValueHeader;
 public:	
 	
-	CCaseChecker()
+	CCaseChecker(): mpFl(nullptr), mpValueHeader(nullptr)
 	{
 		strcpy(name, "CaseCheck");
+		
 	};
 	void Prepare(char *Table);
 	~CCaseChecker();

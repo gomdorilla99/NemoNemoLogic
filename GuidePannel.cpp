@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "GuidePannel.h"
 #include "CaseChecker.h"
-#define MAX_TABLE 100
+//#define MAX_TABLE 100
 
 #define NEXT_ITEM(pTile) ((!direction) ? pTile->pRight : pTile->pDown)
 #define PREV_ITEM(pTile) ((!direction) ? pTile->pLeft : pTile->pUp)
-CGuidePannel::CGuidePannel()
+CGuidePannel::CGuidePannel():mRemainValues(0),mNumOfValue(0)
 {
 	strcpy(name, "GudPannel");
 	pNext = NULL;

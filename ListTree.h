@@ -169,7 +169,8 @@ template<typename T>  Node<T> *CLinkList<T>::AddToTail(Node<T> *newNode)
 	}
 	else
 	{
-		pTail->pNext = newNode;
+		if(pTail)
+			pTail->pNext = newNode;
 		newNode->pNext = NULL;
 		return newNode;
 	}

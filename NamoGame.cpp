@@ -37,9 +37,9 @@ void NamoGame::GameLoad()
 
 
 
-	for (int i = 0; i < mHeight; i++)
+	for (unsigned int i = 0; i < mHeight; i++)
 	{
-		for (int j = 0; j < mWidth; j++)
+		for (unsigned int j = 0; j < mWidth; j++)
 		{
 			if (i>0)
 				pBoardHeader[mWidth * i + j].pUp = &pBoardHeader[mWidth * (i - 1) + j];
@@ -76,7 +76,7 @@ void NamoGame::LoadGameData()
 	char *st;
 	fopen_s(&pFile, "GameData.txt", "rt");
 
-	CGameData *pGameData;
+	CGameData *pGameData =nullptr;
 	CGameData *pTail;
 	if (pFile)
 	{
@@ -97,15 +97,17 @@ void NamoGame::LoadGameData()
 					pGameDataHeader->GetTail()->pNext = pGameData;
 					pGameData->pPrev = pTail;
 				}
-				int size;
+				
 				st = strstr(strBuffer, ",");
 				st = strstr(st+1, ",");
 				strcpy_s(strScript, 100, st + 1);
-				strtok_s(strScript, "]",&st);
-				pGameData->mStrDesciption = strScript;
-				pGameData->mHeight = height;
-				pGameData->mWidth = width;
-				
+				if (strtok_s(strScript, "]", &st))
+				{
+					pGameData->mStrDesciption = strScript;
+					pGameData->mHeight = height;
+					pGameData->mWidth = width;
+				}
+
 				for (int i=0; i < width;i++)
 				{
 					fgets(strBuffer, 1024, pFile);
@@ -113,18 +115,22 @@ void NamoGame::LoadGameData()
 					{
 						int num;
 						char *pt, *st;
-						strtok_s(strBuffer, ";", &pt);						
-						num = pGameData->AddHorGuide(strBuffer);
-						if (pGameData->mCodeHeight < num)
-							pGameData->mCodeHeight = num;						
+						if (strtok_s(strBuffer, ";", &pt))
+						{
+							num = pGameData->AddHorGuide(strBuffer);
+							if (pGameData->mCodeHeight < num)
+								pGameData->mCodeHeight = num;
+						}
+		
 						while (*pt)
 						{
 							st = pt;
-							strtok_s(st, ";", &pt);
-							num = pGameData->AddHorGuide(st);
-							if (pGameData->mCodeHeight < num)
-								pGameData->mCodeHeight = num;
-							
+							if (strtok_s(st, ";", &pt))
+							{
+								num = pGameData->AddHorGuide(st);
+								if (pGameData->mCodeHeight < num)
+									pGameData->mCodeHeight = num;
+							}
 						}
 						break;
 					}
@@ -296,9 +302,12 @@ void NamoGame::LoadGameData()
 				//Add Guide pad 
 			}
 		}
-		pGameData->pNext = pGameDataHeader;
-		pGameDataHeader->pPrev = pGameData;
-		fclose(pFile);
+		if (pGameData)
+		{
+			pGameData->pNext = pGameDataHeader;
+			pGameDataHeader->pPrev = pGameData;
+			fclose(pFile);
+		}
 	}
 	else
 	{
@@ -313,11 +322,11 @@ CPoint NamoGame::GetPointXY(CPoint xy)
 	ret.x = (int)(((double)(xy.x - mOffset.x - (mCodeWidth*stepx))) / stepx);
 	ret.y = (int)(((double)(xy.y - mOffset.y - (mCodeHeight*stepx))) / stepy);
 #if 1
-	if ((xy.x - mOffset.x - (mCodeWidth*stepx))<0)
+	if (((long)xy.x - (long)mOffset.x - (mCodeWidth*stepx))<0)
 	{
 		ret.x -= 1;
 	}
-	if ((xy.y- mOffset.y - (mCodeHeight*stepy))<0)
+	if (((long)xy.y- (long)mOffset.y - (mCodeHeight*stepy))<0)
 	{
 		ret.y -= 1;
 	}
@@ -346,7 +355,6 @@ void NamoGame::Set(int start_x, int start_y, int end_x, int end_y)
 
 void NamoGame::AutoCheck(int start_x, int start_y, int end_x, int end_y)
 {
-	int i, j;
 	int left = min(start_x, end_x);
 	int top = min(start_y, end_y);
 	int right = max(start_x, end_x);
@@ -373,7 +381,7 @@ void NamoGame::AutoCheck(int start_x, int start_y, int end_x, int end_y)
 	{
 		CGuidePannel *pGuide;
 		pGuide = pCurrentGame->pVGuide;
-		for (int i = 0; i < mHeight; i++)
+		for (unsigned int i = 0; i < mHeight; i++)
 		{
 			if (i == top)
 			{
@@ -434,7 +442,7 @@ void NamoGame::Mark(CDC *pDC, int start_x, int start_y, int end_x, int end_y, CR
 	int bottom = max(start_y, end_y);
 
 	CFont BDFont;
-	BDFont.CreateFont(stepy * 3. / 10., stepx * 2. / 10., 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, _T("ÈÞ¸ÕÆíÁöÃ¼"));
+	BDFont.CreateFont(stepy * 3 / 10, stepx * 2 / 10, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, _T("ÈÞ¸ÕÆíÁöÃ¼"));
 	
 
 	oldPen = pDC->SelectObject(&penWide);
@@ -465,7 +473,7 @@ void NamoGame::Mark(CDC *pDC, int start_x, int start_y, int end_x, int end_y, CR
 		
 
 		pGuide = pCurrentGame->pHGuide;
-		for (int i = 0; i < mWidth; i++)
+		for (unsigned int i = 0; i < mWidth; i++)
 		{
 			if (i == left)
 			{
@@ -547,7 +555,7 @@ void NamoGame::Mark(CDC *pDC, int start_x, int start_y, int end_x, int end_y, CR
 	{
 		CGuidePannel *pGuide;
 		pGuide = pCurrentGame->pVGuide;
-		for (int i = 0; i < mHeight; i++)
+		for (unsigned int i = 0; i < mHeight; i++)
 		{
 			if (i == top)
 			{
@@ -696,8 +704,7 @@ void NamoGame::Mark(CDC *pDC, int start_x, int start_y, int end_x, int end_y, CR
 int NamoGame::DrawFinal(CDC *pDC, CRect rectWindow)
 {
 	CRect rect;
-	int i;
-	int j;
+	unsigned int i, j;
 	CPen *oldPen;
 	//	int offsetx=100;
 	//	int offsety=100;
@@ -716,9 +723,9 @@ int NamoGame::DrawFinal(CDC *pDC, CRect rectWindow)
 	pOldFont = pDC->SelectObject(&BDFont);
 
 	pDC->DrawTextEx(mStrGameDescription, rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER, NULL);
-	for (int i = 0; i < mHeight; i++)
+	for (unsigned int i = 0; i < mHeight; i++)
 	{
-		for (int j = 0; j < mWidth; j++)
+		for (unsigned int j = 0; j < mWidth; j++)
 		{
 			if (pBoardHeader[i*mWidth + j].GetStatus()==3)
 			{
@@ -735,7 +742,7 @@ int NamoGame::DrawFinal(CDC *pDC, CRect rectWindow)
 			*/
 		}
 	}
-	int  k, l, a, b;
+	unsigned int  k, l, a, b;
 	for (i = 0; i < mHeight; i++)
 	{
 		for (j = 0; j < mWidth; j++)
@@ -760,7 +767,7 @@ int NamoGame::DrawFinal(CDC *pDC, CRect rectWindow)
 							{
 								if (pBoardHeader[i*mWidth + j].GetStatus() == 3)
 								{
-									if (abs(k - j) + abs(l - j) == 2)
+									if (abs((long)(k - j)) + abs((long)(l - j)) == 2)
 									{
 										if (pBoardHeader[i*mWidth + j].GetStatus() == 3)
 										{
@@ -802,11 +809,6 @@ int NamoGame::DrawFinal(CDC *pDC, CRect rectWindow)
 int NamoGame::DrawMini(CDC *pDC, CRect rectWindow)
 {
 	CRect rect;
-	int i;
-	int j;
-	CPen *oldPen;
-
-
 	//	int offsetx=100;
 	//	int offsety=100;
 
@@ -814,9 +816,9 @@ int NamoGame::DrawMini(CDC *pDC, CRect rectWindow)
 
 	pDC->SetBkMode(TRANSPARENT);
 
-	for (int i = 0; i < mHeight; i++)
+	for (unsigned int i = 0; i < mHeight; i++)
 	{
-		for (int j = 0; j < mWidth; j++)
+		for (unsigned int j = 0; j < mWidth; j++)
 		{
 
 			if (pBoardHeader[i*mWidth + j].GetStatus() >= 3)
@@ -841,7 +843,7 @@ int NamoGame::DrawPannels(CDC *pDC, CRect rectWindow)
 	// Horizontal Pannel
 	CPen *oldPen;
 	CFont BDFont;
-	BDFont.CreateFont(stepy * 7. / 10., stepx * 3. / 10., 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, _T("ÈÞ¸ÕÆíÁöÃ¼"));
+	BDFont.CreateFont(stepy * 7 / 10, stepx * 3 / 10, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, _T("ÈÞ¸ÕÆíÁöÃ¼"));
 	CFont *pOldFont;
 	pOldFont = pDC->SelectObject(&BDFont);
 	
@@ -857,14 +859,14 @@ int NamoGame::DrawPannels(CDC *pDC, CRect rectWindow)
 			Pen.CreatePen(PS_SOLID, 5, RGB(255,255, 255));		
 		}
 		oldPen = pDC->SelectObject(&Pen);
-		pDC->MoveTo(mOffset.x + mCodeWidth*stepx - 3, mOffset.y + (i + mCodeHeight)*stepy + 4);
-		pDC->LineTo(mOffset.x + mCodeWidth*stepx - 3, mOffset.y + (i + mCodeHeight + 1)*stepy - 4);
+		pDC->MoveTo(mOffset.x + mCodeWidth*stepx - 3, mOffset.y + ((long)i + (long)mCodeHeight)*stepy + 4);
+		pDC->LineTo(mOffset.x + mCodeWidth*stepx - 3, mOffset.y + ((long)i + (long)mCodeHeight + 1)*stepy - 4);
 
 		pDC->SelectObject(oldPen);
 		
 		for (j = 0; j < mCodeWidth; j++)
 		{
-			rect.SetRect(mOffset.x + (j)*stepx, mOffset.y + (i + mCodeHeight)*stepy + (i / 5), mOffset.x + (j + 1)*stepx, mOffset.y + (i + mCodeHeight + 1)*stepy + (i / 5));
+			rect.SetRect(mOffset.x + (j)*stepx, mOffset.y + ((long)i + mCodeHeight)*stepy + (i / 5), mOffset.x + ((long)j + 1)*stepx, mOffset.y + (i + mCodeHeight + 1)*stepy + (i / 5));
 			//text.Format(_T("%d%d"), i % 10, j % 10);
 
 			CGuidePannel *pPannel = pCurrentGame->GetVerGuide(i);
@@ -923,14 +925,14 @@ int NamoGame::DrawPannels(CDC *pDC, CRect rectWindow)
 		
 		}
 		oldPen = pDC->SelectObject(&Pen);
-		pDC->MoveTo(mOffset.x + (i + mCodeWidth)*stepx +4, mOffset.y + mCodeHeight*stepy - 3);
-		pDC->LineTo(mOffset.x + (i + mCodeWidth + 1)*stepx -4, mOffset.y + mCodeHeight*stepy - 3);
+		pDC->MoveTo(mOffset.x + (i + (long)mCodeWidth)*stepx +4, mOffset.y + mCodeHeight*stepy - 3);
+		pDC->LineTo(mOffset.x + (i + (long)mCodeWidth + 1)*stepx -4, mOffset.y + mCodeHeight*stepy - 3);
 		pDC->SelectObject(oldPen);
 
 		
 		for (j = 0; j < mCodeHeight; j++)
 		{
-			rect.SetRect(mOffset.x + (mCodeWidth + i)*stepx + (i / 5), mOffset.y + j*stepy + (j / 5), mOffset.x + (mCodeWidth + i + 1)*stepx + (i / 5), mOffset.y + (j + 1)*stepy + (j / 5));
+			rect.SetRect(mOffset.x + ((long)mCodeWidth + i)*stepx + (i / 5), mOffset.y + j*stepy + (j / 5), mOffset.x + (mCodeWidth + i + 1)*stepx + (i / 5), mOffset.y + (j + 1)*stepy + (j / 5));
 			int value;
 
 			CGuidePannel *pPannel = pCurrentGame->GetHorGuide(i);
@@ -982,7 +984,6 @@ int NamoGame::DrawNaNoGram(CDC *pDC, CRect rectWindow)
 {
 	
 	int i;
-	int j;
 	
 //	int offsetx=100;
 //	int offsety=100;
@@ -996,11 +997,11 @@ int NamoGame::DrawNaNoGram(CDC *pDC, CRect rectWindow)
 	for (i = 0; i < mHeight; i++)
 	{
 		
-		pDC->MoveTo(mOffset.x, mOffset.y + stepy*(i + mCodeHeight) + (i / 5));
-		pDC->LineTo(mOffset.x + stepx*(mWidth + mCodeWidth) + (mWidth / 5), mOffset.y + stepy*(i + mCodeHeight) + (i / 5));
+		pDC->MoveTo(mOffset.x, mOffset.y + stepy*(i + (long)mCodeHeight) + (i / 5));
+		pDC->LineTo(mOffset.x + stepx*(mWidth + (long)mCodeWidth) + (long)(mWidth / 5), mOffset.y + stepy*(i + (long)mCodeHeight) + (i / 5));
 
-		pDC->MoveTo(mOffset.x, mOffset.y + stepy*(i + 1 + mCodeHeight) + (i / 5));
-		pDC->LineTo(mOffset.x + stepx*(mWidth + mCodeWidth) + (mWidth / 5), mOffset.y + stepy*(i + 1 + mCodeHeight) + (i / 5));
+		pDC->MoveTo(mOffset.x, mOffset.y + stepy*(i + 1 + (long)mCodeHeight) + (i / 5));
+		pDC->LineTo(mOffset.x + stepx*(mWidth + (long)mCodeWidth) + (mWidth / 5), mOffset.y + stepy*(i + 1 + (long)mCodeHeight) + (i / 5));
 		//pDC->SelectObject(oldPen);
 
 	}
@@ -1017,10 +1018,10 @@ int NamoGame::DrawNaNoGram(CDC *pDC, CRect rectWindow)
 	{
 		for (int j = 0; j < mWidth; j++)
 		{
-			rect.SetRect(mOffset.x + (j + mCodeWidth)*stepx + (j / 5),
-				mOffset.y + (i + mCodeHeight)*stepy + (i / 5),
-				mOffset.x + (j + mCodeWidth + 1)*stepx + (j / 5) + 1,
-				mOffset.y + (i + mCodeHeight + 1)*stepy + (i / 5) + 1);
+			rect.SetRect(mOffset.x + (j + (long)mCodeWidth)*stepx + (j / 5),
+				mOffset.y + (i + (long)mCodeHeight)*stepy + (i / 5),
+				mOffset.x + (j + (long)mCodeWidth + 1)*stepx + (j / 5) + 1,
+				mOffset.y + (i + (long)mCodeHeight + 1)*stepy + (i / 5) + 1);
 			pBoardHeader[i*mWidth + j].SetPosition(rect);
 			pBoardHeader[i*mWidth + j].DrawTile(pDC);
 		}
@@ -1037,18 +1038,18 @@ int NamoGame::DrawNaNoGram(CDC *pDC, CRect rectWindow)
 			oldPen = pDC->SelectObject(&penNormal);
 
 		}*/
-		pDC->MoveTo(mOffset.x + stepx*(i + mCodeWidth) + (i / 5), mOffset.y);
-		pDC->LineTo(mOffset.x + stepx*(i + mCodeWidth) + (i / 5), mOffset.y + stepy*(mHeight + mCodeHeight) + (mHeight / 5));
+		pDC->MoveTo(mOffset.x + stepx*(i + (long)mCodeWidth) + (i / 5), mOffset.y);
+		pDC->LineTo(mOffset.x + stepx*(i + (long)mCodeWidth) + (i / 5), mOffset.y + stepy*(mHeight + (long)mCodeHeight) + (mHeight / 5));
 		
-		pDC->MoveTo(mOffset.x + stepx*(i+1 + mCodeWidth) + (i / 5), mOffset.y);
-		pDC->LineTo(mOffset.x + stepx*(i + 1 + mCodeWidth) + (i / 5), mOffset.y + stepy*(mHeight + mCodeHeight) + (mHeight / 5));
+		pDC->MoveTo(mOffset.x + stepx*(i+1 + (long)mCodeWidth) + (i / 5), mOffset.y);
+		pDC->LineTo(mOffset.x + stepx*(i + 1 + (long)mCodeWidth) + (i / 5), mOffset.y + stepy*(mHeight + (long)mCodeHeight) + (mHeight / 5));
 		//pDC->SelectObject(oldPen);
 
 		
 	}
 	
 	CFont SmallFont;
-	SmallFont.CreateFont(10., 5, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, _T("ÈÞ¸ÕÆíÁöÃ¼"));
+	SmallFont.CreateFont(10, 5, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, _T("ÈÞ¸ÕÆíÁöÃ¼"));
 
 	DrawPannels(pDC, rectWindow);
 	
@@ -1065,7 +1066,7 @@ int NamoGame::DrawNaNoGram(CDC *pDC, CRect rectWindow)
 
 int NamoGame::DebugLocation(CDC *pDC,CPoint point)
 {
-	int i, j;
+	int i;
 	CGuidePannel *pGuide;
 #if 0
 //	printf("*************************** Ver %d *******************\r\n ", point.x);
@@ -1098,9 +1099,8 @@ int NamoGame::DebugLocation(CDC *pDC,CPoint point)
 
 int NamoGame::GameGetHint(CDC *pDC)
 {
-	int i, j;
-	int k;
-
+	int i;
+	
 	CGuidePannel *pGuide;
 	int count = 1;
 	pGuide = pCurrentGame->pHGuide;
@@ -1126,8 +1126,8 @@ int NamoGame::GameGetHint(CDC *pDC)
 }
 int NamoGame::GameStatusCheck(CDC *pDC)
 {
-	int i, j;
-	int k;
+	unsigned int i, j;
+	unsigned int k;
 
 	CGuidePannel *pGuide ;
 	int count = 0;
